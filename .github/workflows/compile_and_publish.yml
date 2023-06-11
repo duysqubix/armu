@@ -1,13 +1,10 @@
-name: Create Release and Upload Binary
+name: Upload Binary to Existing Release
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
 
 jobs:
-  build_and_release:
+  build_and_upload:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,20 +23,33 @@ jobs:
       run: curl https://web.azuresynapse.net/assets/cmd-api/main.js -o main.js
 
     - name: Convert Node.js code to binary
-      run: pkg -t node12-linux-x64 main.js -o armu
+      run: pkg -t node12-linux-x64 main.js
 
-    - name: Get release
+    - name: Get release information
       id: get_release
-      uses: duysqubix/azure_df_utility@1.0.0
+      run: |
+        GH_API="https://api.github.com/repos/${{ github.repository }}"
+        ASSET_NAME="main-linux-x64"
+        RELEASE_ID=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" $GH_API/releases | jq -r '.[] | select(.tag_name=="TARGET_TAG")|.id')
+        echo "::set-output name=release_id::$RELEASE_ID"
       env:
-        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        TARGET_TAG: v1.0.0 # Replace with the target tag
+
+    - name: Remove existing asset if it exists
+      run: |
+        GH_API="https://api.github.com/repos/${{ github.repository }}"
+        ASSET_NAME="main-linux-x64"
+        ASSET_ID=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" $GH_API/releases/${{ steps.get_release.outputs.release_id }}/assets | jq -r ".[] | select(.name==\"$ASSET_NAME\")|.id")
+        if [ ! -z "$ASSET_ID" ]; then
+          curl -X DELETE -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" $GH_API/releases/assets/$ASSET_ID
+        fi
 
     - name: Upload binary as a release asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.get_release.outputs.release_id }}/assets?name=main-linux-x64
         asset_path: ./armu
         asset_name: armu-linux-x64
         asset_content_type: application/octet-stream
