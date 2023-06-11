@@ -1,0 +1,49 @@
+name: Create Release and Upload Binary
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '12'
+
+    - name: Install pkg
+      run: npm install -g pkg
+
+    - name: Download Node.js code
+      run: curl https://web.azuresynapse.net/assets/cmd-api/main.js -o main.js
+
+    - name: Convert Node.js code to binary
+      run: pkg -t node12-linux-x64 main.js -o armu
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload binary as a release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./main
+        asset_name: main-linux-x64
+        asset_content_type: application/octet-stream
