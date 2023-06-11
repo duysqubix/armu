@@ -30,7 +30,7 @@ jobs:
 
     - name: Get release
       id: get_release
-      uses: duysqubix/azure_df_utility@v1.0.0
+      uses: duysqubix/azure_df_utility@1.0.0
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
 
