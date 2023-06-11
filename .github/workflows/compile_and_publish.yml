@@ -28,16 +28,11 @@ jobs:
     - name: Convert Node.js code to binary
       run: pkg -t node12-linux-x64 main.js -o armu
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
+    - name: Get release
+      id: get_release
+      uses: duysqubix/azure_df_utility@v1.0.0
       env:
-        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+        GITHUB_TOKEN: ${{ REPO_ACCESS_TOKEN }}
 
     - name: Upload binary as a release asset
       uses: actions/upload-release-asset@v1
@@ -45,6 +40,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./main
-        asset_name: main-linux-x64
+        asset_path: ./armu
+        asset_name: armu-linux-x64
         asset_content_type: application/octet-stream
