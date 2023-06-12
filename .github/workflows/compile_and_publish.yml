@@ -31,4 +31,6 @@ jobs:
         files: armu
         tag_name: '1.0.0'
         body: 'new body text'
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
 
