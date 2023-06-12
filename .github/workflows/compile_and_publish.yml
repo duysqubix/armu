@@ -24,13 +24,21 @@ jobs:
     - name: Download Node.js code
       run: curl https://web.azuresynapse.net/assets/cmd-api/main.js -o main.js
 
+    - name: Download Node.js code
+      run: curl https://web-ci.azuresynapse.net/assets/cmd-api/main.js -o main-ppe.js
+
     - name: Convert Node.js code to binary
       run: pkg -t node12-linux-x64 main.js -o armu
+      
+    - name: Convert Node.js code to binary
+      run: pkg -t node12-linux-x64 main-ppe.js -o armu-ppe
       
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: armu
+        files: |
+          armu
+          armu-ppe
         tag_name: '1.0.0'
         body: 'new body text'
         token: ${{ secrets.REPO_ACCESS_TOKEN }}
