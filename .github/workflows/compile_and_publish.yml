@@ -30,7 +30,7 @@ jobs:
       uses: tubone24/update_release@v1.0
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        TAG_NAME: 1.0.0
+        TAG_NAME: '1.0.0'
       with:
         body: test_body # new body text
 
