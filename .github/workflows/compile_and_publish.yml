@@ -23,32 +23,11 @@ jobs:
       run: curl https://web.azuresynapse.net/assets/cmd-api/main.js -o main.js
 
     - name: Convert Node.js code to binary
-      run: pkg -t node12-linux-x64 main.js
-
-    - name: Get release information
-      id: get_release
-      run: |
-        GH_API="https://api.github.com/repos/${{ github.repository }}"
-        RELEASE_ID=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" $GH_API/releases | jq -r '.[] | select(.tag_name=="TARGET_TAG")|.id')
-        UPLOAD_URL=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" $GH_API/releases | jq -r '.[] | select(.tag_name=="TARGET_TAG")|.upload_url')
-        echo "::set-output name=release_id::$RELEASE_ID"
-        echo "::set-output name=upload_url::$UPLOAD_URL"
-      env:
-        TARGET_TAG: '1.0.0' # Replace with the target tag
-
-    - name: Update release
+      run: pkg -t node12-linux-x64 main.js -o armu
+      
+    - name: Release
       uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
       with:
-        token: ${{ secrets.REPO_ACCESS_TOKEN }}
-        release_id: ${{ steps.get_release.outputs.release_id }}
-        body: test_body
+        files: armu
 
-    - name: Upload binary as a release asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
-      with:
-        upload_url: ${{ steps.get_release.outputs.upload_url }}
-        asset_path: ./armu
-        asset_name: armu-linux-x64
-        asset_content_type: application/octet-stream
